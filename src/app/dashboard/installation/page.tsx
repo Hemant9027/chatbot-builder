@@ -51,7 +51,7 @@ export default async function InstallationPage({
   const base =
     process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? `${proto}://${host}`;
 
-  const snippet = `<script\n  src="${base}/widget.js"\n  data-property-id="${property.id}"\n  async\n></script>`;
+  const snippet = `<script\n  src="${base}/widget.js?v=2"\n  data-property-id="${property.id}"\n  async\n></script>`;
 
   return (
     <div className="mx-auto max-w-4xl">
