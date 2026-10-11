@@ -353,7 +353,7 @@
         }
         submit.disabled = true;
         submit.textContent = "Sending…";
-        sendApi("/api/leads?propertyId=" + encodeURIComponent(propertyId), {
+        sendApi("/api/leads?propertyId=" + encodeURIComponent(propertyId) + "&v=3", {
           propertyId: propertyId,
           sessionId: sessionId,
           name: nameF.value.trim(),
@@ -429,7 +429,7 @@
       sendBtn.disabled = true;
       var typing = showTyping();
 
-      sendApi("/api/chat?propertyId=" + encodeURIComponent(propertyId), {
+      sendApi("/api/chat?propertyId=" + encodeURIComponent(propertyId) + "&v=3", {
         propertyId: propertyId,
         sessionId: sessionId,
         message: text,

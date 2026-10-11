@@ -12,7 +12,11 @@
         --teal: #16707a;
         --teal-dark: #0f5a62;
       }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
       body {
         font-family: Georgia, "Times New Roman", serif;
         color: var(--ink);
@@ -34,8 +38,13 @@
         padding: 22px 6vw;
         border-bottom: 1px solid #eee6d8;
       }
-      .brand { font-size: 22px; letter-spacing: 0.04em; }
-      .brand span { color: var(--teal); }
+      .brand {
+        font-size: 22px;
+        letter-spacing: 0.04em;
+      }
+      .brand span {
+        color: var(--teal);
+      }
       nav a {
         font-family: ui-sans-serif, system-ui, sans-serif;
         font-size: 14px;
@@ -43,17 +52,31 @@
         text-decoration: none;
         margin-left: 26px;
       }
-      nav a:hover { color: var(--teal); }
+      nav a:hover {
+        color: var(--teal);
+      }
       .hero {
         background:
-          linear-gradient(180deg, rgba(23, 45, 51, 0.45), rgba(23, 45, 51, 0.55)),
+          linear-gradient(
+            180deg,
+            rgba(23, 45, 51, 0.45),
+            rgba(23, 45, 51, 0.55)
+          ),
           linear-gradient(135deg, #16707a 0%, #2a9a8f 55%, #e0b270 130%);
         color: #fff;
         padding: 15vh 6vw 18vh;
         text-align: center;
       }
-      .hero h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); font-weight: 400; }
-      .hero p { margin-top: 14px; font-size: 18px; opacity: 0.9; font-style: italic; }
+      .hero h1 {
+        font-size: clamp(2.2rem, 5vw, 3.6rem);
+        font-weight: 400;
+      }
+      .hero p {
+        margin-top: 14px;
+        font-size: 18px;
+        opacity: 0.9;
+        font-style: italic;
+      }
       .hero .cta {
         display: inline-block;
         margin-top: 30px;
@@ -66,8 +89,16 @@
         font-weight: 600;
         font-size: 14px;
       }
-      section { padding: 64px 6vw; max-width: 1000px; margin: 0 auto; }
-      h2 { font-size: 28px; font-weight: 400; margin-bottom: 12px; }
+      section {
+        padding: 64px 6vw;
+        max-width: 1000px;
+        margin: 0 auto;
+      }
+      h2 {
+        font-size: 28px;
+        font-weight: 400;
+        margin-bottom: 12px;
+      }
       h2::after {
         content: "";
         display: block;
@@ -76,10 +107,27 @@
         background: var(--teal);
         margin-top: 12px;
       }
-      .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 22px; margin-top: 30px; }
-      .item { background: var(--sand); border-radius: 14px; padding: 24px; }
-      .item h3 { font-size: 17px; margin-bottom: 6px; color: var(--teal-dark); }
-      .item p { font-family: ui-sans-serif, system-ui, sans-serif; font-size: 13.5px; color: var(--muted); }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+        gap: 22px;
+        margin-top: 30px;
+      }
+      .item {
+        background: var(--sand);
+        border-radius: 14px;
+        padding: 24px;
+      }
+      .item h3 {
+        font-size: 17px;
+        margin-bottom: 6px;
+        color: var(--teal-dark);
+      }
+      .item p {
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        font-size: 13.5px;
+        color: var(--muted);
+      }
       footer {
         border-top: 1px solid #eee6d8;
         padding: 30px 6vw;
@@ -92,8 +140,8 @@
   </head>
   <body>
     <div class="demo-banner">
-      DEMO TEST SITE — “Azure Palms Resort &amp; Spa” is a fictional hotel used to
-      test the InfyCrest GuestAI widget. Try the chat bubble in the corner.
+      DEMO TEST SITE — “Azure Palms Resort &amp; Spa” is a fictional hotel used
+      to test the InfyCrest GuestAI widget. Try the chat bubble in the corner.
     </div>
 
     <header>
@@ -115,26 +163,50 @@
     <section id="rooms">
       <h2>Rooms &amp; Villas</h2>
       <div class="grid">
-        <div class="item"><h3>Garden Room</h3><p>Queen bed, tropical garden terrace, rainfall shower.</p></div>
-        <div class="item"><h3>Ocean Suite</h3><p>King bed, panoramic balcony, deep soaking tub.</p></div>
-        <div class="item"><h3>Beachfront Villa</h3><p>Two bedrooms, private plunge pool, direct beach access.</p></div>
+        <div class="item">
+          <h3>Garden Room</h3>
+          <p>Queen bed, tropical garden terrace, rainfall shower.</p>
+        </div>
+        <div class="item">
+          <h3>Ocean Suite</h3>
+          <p>King bed, panoramic balcony, deep soaking tub.</p>
+        </div>
+        <div class="item">
+          <h3>Beachfront Villa</h3>
+          <p>Two bedrooms, private plunge pool, direct beach access.</p>
+        </div>
       </div>
     </section>
 
     <section id="dining">
       <h2>Dining</h2>
       <div class="grid">
-        <div class="item"><h3>Coral &amp; Smoke</h3><p>Fire-kissed seafood, open daily 6:00 PM – 10:30 PM.</p></div>
-        <div class="item"><h3>The Palm Terrace</h3><p>All-day dining, breakfast 6:30 – 10:30 AM.</p></div>
+        <div class="item">
+          <h3>Coral &amp; Smoke</h3>
+          <p>Fire-kissed seafood, open daily 6:00 PM – 10:30 PM.</p>
+        </div>
+        <div class="item">
+          <h3>The Palm Terrace</h3>
+          <p>All-day dining, breakfast 6:30 – 10:30 AM.</p>
+        </div>
       </div>
     </section>
 
     <section id="spa">
       <h2>Spa &amp; Activities</h2>
       <div class="grid">
-        <div class="item"><h3>Palm Spa</h3><p>Open daily 9 AM – 8 PM. Massages, facials, ocean-view cabanas.</p></div>
-        <div class="item"><h3>Lagoon Pool</h3><p>Heated infinity pool, open 7 AM – 10 PM.</p></div>
-        <div class="item"><h3>Snorkel &amp; Kayak</h3><p>Complimentary equipment at the dive center.</p></div>
+        <div class="item">
+          <h3>Palm Spa</h3>
+          <p>Open daily 9 AM – 8 PM. Massages, facials, ocean-view cabanas.</p>
+        </div>
+        <div class="item">
+          <h3>Lagoon Pool</h3>
+          <p>Heated infinity pool, open 7 AM – 10 PM.</p>
+        </div>
+        <div class="item">
+          <h3>Snorkel &amp; Kayak</h3>
+          <p>Complimentary equipment at the dive center.</p>
+        </div>
       </div>
     </section>
 
@@ -145,7 +217,7 @@
 
     <!-- InfyCrest GuestAI widget — property ID matches the seeded demo property -->
     <script
-      src="/widget.js?v=2"
+      src="/widget.js?v=3"
       data-property-id="00000000-0000-4000-8000-000000000001"
       async
     ></script>
