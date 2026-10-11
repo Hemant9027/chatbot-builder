@@ -14,7 +14,15 @@ import {
   MessageSquarePlus,
   ShieldCheck,
 } from "lucide-react";
-import { Button, Card, Badge, Input, Textarea, Label, Spinner } from "@/components/ui";
+import {
+  Button,
+  Card,
+  Badge,
+  Input,
+  Textarea,
+  Label,
+  Spinner,
+} from "@/components/ui";
 import {
   addFaqAction,
   addDocumentAction,
@@ -61,7 +69,9 @@ export function KnowledgeManager({
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
 
   // Add FAQ form
   const [question, setQuestion] = useState("");
@@ -78,7 +88,10 @@ export function KnowledgeManager({
 
   const flash = (ok: boolean, text: string) => setNotice({ ok, text });
 
-  const run = (fn: () => Promise<{ ok: boolean; error?: string }>, okText: string) => {
+  const run = (
+    fn: () => Promise<{ ok: boolean; error?: string }>,
+    okText: string,
+  ) => {
     startTransition(async () => {
       const result = await fn();
       if (result.ok) {
@@ -91,8 +104,11 @@ export function KnowledgeManager({
   };
 
   const addFaq = () => {
-    if (question.trim().length < 4 || answer.trim().length < 4) {
-      flash(false, "Both question and answer are required (min 4 characters).");
+    if (question.trim().length < 1 || answer.trim().length < 4) {
+      flash(
+        false,
+        "Question is required and the answer must be at least 4 characters.",
+      );
       return;
     }
     run(
@@ -105,7 +121,8 @@ export function KnowledgeManager({
 
   const addDoc = () => {
     run(
-      async () => addDocumentAction({ propertyId, title: docTitle, content: docContent }),
+      async () =>
+        addDocumentAction({ propertyId, title: docTitle, content: docContent }),
       "Document added and approved.",
     );
     setDocTitle("");
@@ -127,7 +144,8 @@ export function KnowledgeManager({
 
   const saveEdit = (id: string) => {
     run(
-      async () => updateKnowledgeAction({ id, title: editTitle, content: editContent }),
+      async () =>
+        updateKnowledgeAction({ id, title: editTitle, content: editContent }),
       "Entry updated.",
     );
     setEditing(null);
@@ -178,7 +196,9 @@ export function KnowledgeManager({
                   onClick={() => {
                     setQuestion(u.question);
                     setAnswer("");
-                    document.getElementById("add-faq-section")?.scrollIntoView({ behavior: "smooth" });
+                    document
+                      .getElementById("add-faq-section")
+                      ?.scrollIntoView({ behavior: "smooth" });
                   }}
                 >
                   <Plus className="size-3.5" />
@@ -236,7 +256,8 @@ export function KnowledgeManager({
             Import from website
           </h2>
           <p className="mt-1 text-xs text-ink-400">
-            Respects robots.txt & rate limits. Results stay pending until you approve them.
+            Respects robots.txt & rate limits. Results stay pending until you
+            approve them.
           </p>
           <div className="mt-4 space-y-3">
             <div>
@@ -249,7 +270,12 @@ export function KnowledgeManager({
                 placeholder="https://yourhotel.com/rooms"
               />
             </div>
-            <Button onClick={scan} disabled={pending || scanUrl.trim().length < 8} className="w-full" variant="secondary">
+            <Button
+              onClick={scan}
+              disabled={pending || scanUrl.trim().length < 8}
+              className="w-full"
+              variant="secondary"
+            >
               {pending ? <Spinner /> : <Globe className="size-4" />}
               Scan page safely
             </Button>
@@ -267,7 +293,8 @@ export function KnowledgeManager({
             Add document
           </h2>
           <p className="mt-1 text-xs text-ink-400">
-            Paste policies, house rules, menus, or guides (up to 20k characters).
+            Paste policies, house rules, menus, or guides (up to 20k
+            characters).
           </p>
           <div className="mt-4 space-y-3">
             <div>
@@ -291,7 +318,11 @@ export function KnowledgeManager({
             </div>
             <Button
               onClick={addDoc}
-              disabled={pending || docTitle.trim().length < 2 || docContent.trim().length < 20}
+              disabled={
+                pending ||
+                docTitle.trim().length < 2 ||
+                docContent.trim().length < 20
+              }
               className="w-full"
               variant="secondary"
             >
@@ -307,9 +338,13 @@ export function KnowledgeManager({
         <div className="mb-4 flex items-center gap-3">
           <ShieldCheck className="size-5 text-emerald-600" />
           <p className="text-sm text-ink-500">
-            <span className="font-semibold text-ink-800">{approvedSources.length} approved</span>
+            <span className="font-semibold text-ink-800">
+              {approvedSources.length} approved
+            </span>
             {" · "}
-            <span className="font-semibold text-amber-700">{pendingSources.length} awaiting review</span>
+            <span className="font-semibold text-amber-700">
+              {pendingSources.length} awaiting review
+            </span>
             {" · "}
             <span>{rejectedSources.length} rejected</span>
           </p>
@@ -318,8 +353,8 @@ export function KnowledgeManager({
         {sources.length === 0 ? (
           <Card className="px-6 py-14 text-center">
             <p className="text-sm text-ink-500">
-              No knowledge yet. Add FAQs, documents, or scan your website above —
-              the assistant will only answer from approved entries.
+              No knowledge yet. Add FAQs, documents, or scan your website above
+              — the assistant will only answer from approved entries.
             </p>
           </Card>
         ) : (
@@ -335,17 +370,28 @@ export function KnowledgeManager({
                 >
                   {editing === s.id ? (
                     <div className="space-y-3">
-                      <Input value={editTitle} onChange={(e) => setEditTitle(e.target.value)} />
+                      <Input
+                        value={editTitle}
+                        onChange={(e) => setEditTitle(e.target.value)}
+                      />
                       <Textarea
                         value={editContent}
                         onChange={(e) => setEditContent(e.target.value)}
                         rows={6}
                       />
                       <div className="flex gap-2">
-                        <Button size="sm" onClick={() => saveEdit(s.id)} disabled={pending}>
+                        <Button
+                          size="sm"
+                          onClick={() => saveEdit(s.id)}
+                          disabled={pending}
+                        >
                           Save
                         </Button>
-                        <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setEditing(null)}
+                        >
                           Cancel
                         </Button>
                       </div>
@@ -354,9 +400,15 @@ export function KnowledgeManager({
                     <>
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge tone="neutral">{TYPE_LABEL[s.type]}</Badge>
-                        {s.status === "approved" && <Badge tone="green">Approved</Badge>}
-                        {s.status === "pending" && <Badge tone="amber">Pending review</Badge>}
-                        {s.status === "rejected" && <Badge tone="red">Rejected</Badge>}
+                        {s.status === "approved" && (
+                          <Badge tone="green">Approved</Badge>
+                        )}
+                        {s.status === "pending" && (
+                          <Badge tone="amber">Pending review</Badge>
+                        )}
+                        {s.status === "rejected" && (
+                          <Badge tone="red">Rejected</Badge>
+                        )}
                         {s.sourceUrl && (
                           <a
                             href={s.sourceUrl}
@@ -368,7 +420,9 @@ export function KnowledgeManager({
                           </a>
                         )}
                       </div>
-                      <h3 className="mt-2 font-semibold text-ink-900">{s.title}</h3>
+                      <h3 className="mt-2 font-semibold text-ink-900">
+                        {s.title}
+                      </h3>
                       <p className="mt-1 line-clamp-3 text-sm whitespace-pre-wrap text-ink-500">
                         {s.content}
                       </p>
@@ -380,7 +434,11 @@ export function KnowledgeManager({
                             disabled={pending}
                             onClick={() =>
                               run(
-                                async () => setKnowledgeStatusAction({ id: s.id, status: "approved" }),
+                                async () =>
+                                  setKnowledgeStatusAction({
+                                    id: s.id,
+                                    status: "approved",
+                                  }),
                                 "Approved — now trusted knowledge.",
                               )
                             }
@@ -396,7 +454,11 @@ export function KnowledgeManager({
                             disabled={pending}
                             onClick={() =>
                               run(
-                                async () => setKnowledgeStatusAction({ id: s.id, status: "rejected" }),
+                                async () =>
+                                  setKnowledgeStatusAction({
+                                    id: s.id,
+                                    status: "rejected",
+                                  }),
                                 "Rejected — no longer used by the assistant.",
                               )
                             }
@@ -405,7 +467,11 @@ export function KnowledgeManager({
                             Reject
                           </Button>
                         )}
-                        <Button size="sm" variant="ghost" onClick={() => startEdit(s)}>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => startEdit(s)}
+                        >
                           <Pencil className="size-3.5" />
                           Edit
                         </Button>
@@ -414,8 +480,13 @@ export function KnowledgeManager({
                           variant="ghost"
                           disabled={pending}
                           onClick={() => {
-                            if (window.confirm("Delete this entry permanently?")) {
-                              run(async () => deleteKnowledgeAction(s.id), "Deleted.");
+                            if (
+                              window.confirm("Delete this entry permanently?")
+                            ) {
+                              run(
+                                async () => deleteKnowledgeAction(s.id),
+                                "Deleted.",
+                              );
                             }
                           }}
                         >

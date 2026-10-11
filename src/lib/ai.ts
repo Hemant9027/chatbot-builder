@@ -118,20 +118,7 @@ export class MockProvider implements AIProvider {
       };
     }
 
-    const top = opts.retrieved[0];
-    const answer = extractAnswer(top.content).slice(0, 700);
-    const tone = TONE_PHRASES[opts.tone] ?? TONE_PHRASES.friendly;
-
-    const extras: string[] = [];
-    for (const chunk of opts.retrieved.slice(1, 3)) {
-      const a = extractAnswer(chunk.content);
-      if (a && a !== answer) extras.push(a.slice(0, 240));
-    }
-
-    let text = `${tone.prefix} ${answer}`;
-    if (extras.length > 0) {
-      text += `\n\nAlso good to know: ${extras.join(" ")}`;
-    }
+    const text = extractAnswer(opts.retrieved[0].content);
 
     return {
       text,

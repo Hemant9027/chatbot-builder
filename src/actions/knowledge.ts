@@ -45,7 +45,7 @@ async function replaceChunks(
 
 const faqSchema = z.object({
   propertyId: z.string().uuid(),
-  question: z.string().trim().min(4, "Question is too short.").max(300),
+  question: z.string().trim().min(1, "Question is required.").max(300),
   answer: z.string().trim().min(4, "Answer is too short.").max(4000),
 });
 
