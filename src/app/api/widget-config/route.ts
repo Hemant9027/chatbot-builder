@@ -7,8 +7,12 @@ export const dynamic = "force-dynamic";
 
 const querySchema = z.object({ propertyId: z.string().uuid() });
 
-export async function OPTIONS() {
-  return handleCorsPreflight();
+export async function OPTIONS(req: Request) {
+  const propertyId = new URL(req.url).searchParams.get("propertyId");
+  const origin = propertyId
+    ? await validateOrigin(req.headers, propertyId)
+    : { allowed: false, origin: null };
+  return handleCorsPreflight(origin.origin, origin.allowed);
 }
 
 /** Public branding/config for the embeddable widget. No secrets here. */

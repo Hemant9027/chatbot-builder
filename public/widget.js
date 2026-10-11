@@ -47,11 +47,16 @@
     return node;
   }
   function sendApi(path, payload, method) {
-    return fetch(apiBase + path, {
+    var options = {
       method: method || "POST",
-      headers: { "Content-Type": "application/json" },
       credentials: "omit",
-      body: payload ? JSON.stringify(payload) : undefined,
+    };
+    if (payload) {
+      options.headers = { "Content-Type": "application/json" };
+      options.body = JSON.stringify(payload);
+    }
+    return fetch(apiBase + path, {
+      ...options,
     }).then(function (res) {
       return res.json().catch(function () {
         return {};

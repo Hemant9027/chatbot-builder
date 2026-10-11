@@ -67,10 +67,14 @@ export function corsHeaders(origin: string | null, allowed: boolean): HeadersIni
 }
 
 /** Preflight is answered permissively; the actual POST enforces everything. */
-export function handleCorsPreflight(): Response {
+export function handleCorsPreflight(
+  origin: string | null = null,
+  allowed = false,
+): Response {
   return new Response(null, {
     status: 204,
     headers: {
+      ...corsHeaders(origin, allowed),
       "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Access-Control-Max-Age": "86400",
