@@ -60,6 +60,8 @@ async function ensureIndexes(database: Db): Promise<void> {
     database.collection("subscriptions").createIndex({ orgId: 1 }, { unique: true }),
     database.collection("planLimits").createIndex({ planId: 1 }, { unique: true }),
     database.collection("auditLogs").createIndex({ propertyId: 1, createdAt: -1 }),
+    database.collection("rateLimits").createIndex({ key: 1 }, { unique: true }),
+    database.collection("rateLimits").createIndex({ expireAt: 1 }, { expireAfterSeconds: 0 }),
   ]);
 }
 

@@ -1,4 +1,12 @@
 import { Redis } from "@upstash/redis";
+import { getCollection } from "@/db/mongo";
+import type { Document } from "mongodb";
+
+interface MongoRateLimitRecord extends Document {
+  key: string;
+  count: number;
+  expireAt: Date;
+}
 
 export type RateLimitResult = {
   ok: true;
@@ -46,11 +54,6 @@ let redis: Redis | null | undefined;
 function getRedis(): Redis | null {
   if (redis !== undefined) return redis;
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error(
-        "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are required in production",
-      );
-    }
     redis = null;
     return redis;
   }
@@ -72,7 +75,7 @@ export class SharedRateLimiter {
 
   async check(key: string, now: number = Date.now()): Promise<RateLimitResult> {
     const client = getRedis();
-    if (!client) return this.fallback.check(key, now);
+    if (!client) return this.checkMongo(key, now);
 
     const bucket = Math.floor(now / this.windowMs);
     const redisKey = `infycrest:rate:${this.name}:${bucket}:${key}`;
@@ -90,10 +93,46 @@ export class SharedRateLimiter {
         ? { ok: false, retryAfterSec }
         : { ok: true };
     } catch (error) {
+      console.error("Redis rate limiter unavailable", {
+        limiter: this.name,
+        error: error instanceof Error ? error.message : "unknown",
+      });
+      return this.checkMongo(key, now);
+    }
+  }
+
+  private async checkMongo(key: string, now: number): Promise<RateLimitResult> {
+    if (process.env.NODE_ENV !== "production" && !process.env.MONGODB_URI) {
+      return this.fallback.check(key, now);
+    }
+    const bucket = Math.floor(now / this.windowMs);
+    const recordKey = `infycrest:rate:${this.name}:${bucket}:${key}`;
+    const retryAfterSec = Math.max(
+      1,
+      Math.ceil(((bucket + 1) * this.windowMs - now) / 1000),
+    );
+    try {
+      const records = await getCollection<MongoRateLimitRecord>("rateLimits");
+      await records.updateOne(
+        { key: recordKey },
+        {
+          $inc: { count: 1 },
+          $setOnInsert: {
+            key: recordKey,
+            expireAt: new Date((bucket + 1) * this.windowMs + 1_000),
+          },
+        },
+        { upsert: true },
+      );
+      const record = await records.findOne({ key: recordKey });
+      return record && record.count > this.maxHits
+        ? { ok: false, retryAfterSec }
+        : { ok: true };
+    } catch (error) {
       if (process.env.NODE_ENV !== "production") {
         return this.fallback.check(key, now);
       }
-      console.error("Redis rate limiter unavailable", {
+      console.error("Shared rate limiter unavailable", {
         limiter: this.name,
         error: error instanceof Error ? error.message : "unknown",
       });

@@ -39,7 +39,7 @@ npm run build
 | Variable | Required | Purpose |
 | --- | --- | --- |
 | `MONGODB_URI` | **yes** | MongoDB connection string, including the database name. |
-| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | **yes in production** | Shared Redis credentials for chat, lead, scan, and login rate limits. Local development falls back to an in-memory limiter. |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | recommended | Shared Redis credentials for chat, lead, scan, and login rate limits. Without them, MongoDB provides the shared fallback; local development uses an in-memory limiter only when MongoDB is also unavailable. |
 | `OPENAI_API_KEY` | no | Enables the live AI provider. **Without it, the app runs in clearly-labeled MOCK MODE**: answers are composed deterministically from approved knowledge only. |
 | `AI_MODEL` | no | Default `gpt-4o-mini`. |
 | `RESEND_API_KEY` / `RESEND_FROM` | no | Lead-notification emails. Without it, email sends are skipped and logged as `email.not_sent`. |
