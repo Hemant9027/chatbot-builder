@@ -33,7 +33,7 @@ function hasWidgetSnippet(html: string, propertyId: string): boolean {
   const escapedId = propertyId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const normalizedHtml = html.replace(/\\"/g, '"');
   return new RegExp(
-    `data-property-id(?:\\s*=\\s*["']|\\s*:\\s*["'])${escapedId}["']`,
+    `data-property-id["']?(?:\\s*=\\s*["']|\\s*:\\s*["'])${escapedId}["']`,
     "i",
   ).test(normalizedHtml);
 }
