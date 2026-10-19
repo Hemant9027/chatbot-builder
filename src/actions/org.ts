@@ -31,10 +31,11 @@ const MAX_VERIFIER_REDIRECTS = 5;
 
 function hasWidgetSnippet(html: string, propertyId: string): boolean {
   const escapedId = propertyId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const normalizedHtml = html.replace(/\\"/g, '"');
   return new RegExp(
-    `data-property-id\\s*=\\s*["']${escapedId}["']`,
+    `data-property-id(?:\\s*=\\s*["']|\\s*:\\s*["'])${escapedId}["']`,
     "i",
-  ).test(html);
+  ).test(normalizedHtml);
 }
 
 async function fetchVerifierPage(startUrl: URL): Promise<Response> {
