@@ -6,8 +6,20 @@ import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Save, SendHorizontal, Rocket, PauseCircle, X } from "lucide-react";
-import { Button, Input, Textarea, Label, Select, FieldError, Spinner, Badge } from "@/components/ui";
-import { updateChatbotSettingsAction, setPublishedAction } from "@/actions/chatbot";
+import {
+  Button,
+  Input,
+  Textarea,
+  Label,
+  Select,
+  FieldError,
+  Spinner,
+  Badge,
+} from "@/components/ui";
+import {
+  updateChatbotSettingsAction,
+  setPublishedAction,
+} from "@/actions/chatbot";
 import { cn } from "@/lib/utils";
 
 const schema = z.object({
@@ -53,7 +65,9 @@ export function ChatbotSettingsForm({
   isPublished: boolean;
 }) {
   const router = useRouter();
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
   const [publishing, setPublishing] = useState(false);
 
   const {
@@ -95,7 +109,10 @@ export function ChatbotSettingsForm({
       contactPhone: values.contactPhone || null,
     });
     if (result.ok) {
-      setNotice({ ok: true, text: "Settings saved. The widget updates automatically." });
+      setNotice({
+        ok: true,
+        text: "Settings saved. The widget updates automatically.",
+      });
       router.refresh();
     } else {
       setNotice({ ok: false, text: result.error });
@@ -104,7 +121,10 @@ export function ChatbotSettingsForm({
 
   const togglePublish = async () => {
     setPublishing(true);
-    const result = await setPublishedAction({ propertyId, isPublished: !isPublished });
+    const result = await setPublishedAction({
+      propertyId,
+      isPublished: !isPublished,
+    });
     setPublishing(false);
     if (result.ok) {
       setNotice({
@@ -146,19 +166,30 @@ export function ChatbotSettingsForm({
             </div>
             <div>
               <Label htmlFor="logoUrl">Logo URL (optional)</Label>
-              <Input id="logoUrl" type="url" placeholder="https://…/logo.png" {...register("logoUrl")} />
+              <Input
+                id="logoUrl"
+                type="url"
+                placeholder="https://…/logo.png"
+                {...register("logoUrl")}
+              />
               <FieldError>{errors.logoUrl?.message}</FieldError>
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="welcomeMessage">Welcome message</Label>
-              <Textarea id="welcomeMessage" rows={2} {...register("welcomeMessage")} />
+              <Textarea
+                id="welcomeMessage"
+                rows={2}
+                {...register("welcomeMessage")}
+              />
               <FieldError>{errors.welcomeMessage?.message}</FieldError>
             </div>
           </div>
         </section>
 
         <section className="rounded-2xl border border-ink-100 bg-white p-6">
-          <h2 className="text-base font-semibold text-ink-900">Appearance & voice</h2>
+          <h2 className="text-base font-semibold text-ink-900">
+            Appearance & voice
+          </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <div>
               <Label htmlFor="accentColor">Accent color</Label>
@@ -167,7 +198,11 @@ export function ChatbotSettingsForm({
                   type="color"
                   aria-label="Pick accent color"
                   value={accent}
-                  onChange={(e) => setValue("accentColor", e.target.value, { shouldDirty: true })}
+                  onChange={(e) =>
+                    setValue("accentColor", e.target.value, {
+                      shouldDirty: true,
+                    })
+                  }
                   className="h-10 w-12 cursor-pointer rounded-lg border border-ink-200"
                 />
                 <Input id="accentColor" {...register("accentColor")} />
@@ -202,35 +237,56 @@ export function ChatbotSettingsForm({
                 <option value="nl">Nederlands</option>
               </Select>
               <p className="mt-1 text-xs text-ink-400">
-                Multilingual replies depend on the configured AI provider.
-                In mock mode, answers follow the language of your knowledge.
+                Multilingual replies depend on the configured AI provider. In
+                mock mode, answers follow the language of your knowledge.
               </p>
             </div>
           </div>
         </section>
 
         <section className="rounded-2xl border border-ink-100 bg-white p-6">
-          <h2 className="text-base font-semibold text-ink-900">Guest experience</h2>
+          <h2 className="text-base font-semibold text-ink-900">
+            Guest experience
+          </h2>
           <div className="mt-4 space-y-4">
             <div>
-              <Label htmlFor="suggestedQuestionsText">Suggested questions (one per line, max 6)</Label>
-              <Textarea id="suggestedQuestionsText" rows={4} {...register("suggestedQuestionsText")} />
+              <Label htmlFor="suggestedQuestionsText">
+                Suggested questions (one per line, max 6)
+              </Label>
+              <Textarea
+                id="suggestedQuestionsText"
+                rows={4}
+                {...register("suggestedQuestionsText")}
+              />
               <FieldError>{errors.suggestedQuestionsText?.message}</FieldError>
             </div>
             <div>
               <Label htmlFor="handoffMessage">Human handoff message</Label>
-              <Textarea id="handoffMessage" rows={2} {...register("handoffMessage")} />
+              <Textarea
+                id="handoffMessage"
+                rows={2}
+                {...register("handoffMessage")}
+              />
               <FieldError>{errors.handoffMessage?.message}</FieldError>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <Label htmlFor="contactEmail">Escalation email</Label>
-                <Input id="contactEmail" type="email" placeholder="frontdesk@yourhotel.com" {...register("contactEmail")} />
+                <Input
+                  id="contactEmail"
+                  type="email"
+                  placeholder="support@yourbusiness.com"
+                  {...register("contactEmail")}
+                />
                 <FieldError>{errors.contactEmail?.message}</FieldError>
               </div>
               <div>
                 <Label htmlFor="contactPhone">Escalation phone</Label>
-                <Input id="contactPhone" placeholder="+1 555 0100" {...register("contactPhone")} />
+                <Input
+                  id="contactPhone"
+                  placeholder="+1 555 0100"
+                  {...register("contactPhone")}
+                />
                 <FieldError>{errors.contactPhone?.message}</FieldError>
               </div>
             </div>
@@ -242,12 +298,12 @@ export function ChatbotSettingsForm({
               />
               <span>
                 <span className="block text-sm font-medium text-ink-800">
-                  Enable booking-inquiry form
+                  Enable inquiry form
                 </span>
                 <span className="mt-0.5 block text-xs leading-relaxed text-ink-400">
-                  Guests can submit name, contact, dates and party size with
-                  consent. This captures inquiries — it does not confirm
-                  bookings or show live availability.
+                  Visitors can submit their contact details and message with
+                  consent. This captures inquiries — it does not confirm orders,
+                  bookings, appointments, or payments.
                 </span>
               </span>
             </label>
@@ -275,9 +331,13 @@ export function ChatbotSettingsForm({
             {isPublished ? "Unpublish widget" : "Publish widget"}
           </Button>
           {isPublished ? (
-            <Badge tone="green" className="self-center">Live for guests</Badge>
+            <Badge tone="green" className="self-center">
+              Live for guests
+            </Badge>
           ) : (
-            <Badge tone="amber" className="self-center">Not published</Badge>
+            <Badge tone="amber" className="self-center">
+              Not published
+            </Badge>
           )}
         </div>
       </form>
@@ -308,7 +368,8 @@ export function ChatbotSettingsForm({
                 style={{ backgroundColor: accent }}
               >
                 <span className="flex size-8 items-center justify-center rounded-full bg-white/20 text-sm font-semibold text-white">
-                  {watched.displayName?.charAt(0)?.toUpperCase() || propertyName.charAt(0)}
+                  {watched.displayName?.charAt(0)?.toUpperCase() ||
+                    propertyName.charAt(0)}
                 </span>
                 <div className="min-w-0">
                   <p className="truncate text-sm font-semibold text-white">
@@ -351,7 +412,9 @@ export function ChatbotSettingsForm({
             <div
               className={cn(
                 "mt-3 flex",
-                watched.position === "bottom-left" ? "justify-start" : "justify-end",
+                watched.position === "bottom-left"
+                  ? "justify-start"
+                  : "justify-end",
               )}
             >
               <span

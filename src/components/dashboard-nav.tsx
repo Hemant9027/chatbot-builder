@@ -96,7 +96,7 @@ export function DashboardNav({
             htmlFor="property-switcher"
             className="mb-1.5 block text-[11px] font-semibold tracking-[0.1em] text-ink-400 uppercase"
           >
-            Property
+            Business
           </label>
           <div className="relative">
             <select

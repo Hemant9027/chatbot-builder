@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { Plus, ShieldCheck, Trash2, Rocket, PauseCircle } from "lucide-react";
 import { Button, Badge, Spinner } from "@/components/ui";
 import { CopyButton } from "@/components/copy-button";
-import { addDomainAction, removeDomainAction, verifyDomainAction } from "@/actions/org";
+import {
+  addDomainAction,
+  removeDomainAction,
+  verifyDomainAction,
+} from "@/actions/org";
 import { setPublishedAction } from "@/actions/chatbot";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +29,9 @@ export function DomainManager({
   const router = useRouter();
   const [domain, setDomain] = useState("");
   const [pending, startTransition] = useTransition();
-  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(null);
+  const [notice, setNotice] = useState<{ ok: boolean; text: string } | null>(
+    null,
+  );
 
   const add = () => {
     startTransition(async () => {
@@ -45,7 +51,10 @@ export function DomainManager({
       const result = await verifyDomainAction(id);
       setNotice(
         result.ok
-          ? { ok: true, text: "Domain verified — widget snippet found on the page." }
+          ? {
+              ok: true,
+              text: "Domain verified — widget snippet found on the page.",
+            }
           : { ok: false, text: result.error },
       );
       router.refresh();
@@ -79,7 +88,7 @@ export function DomainManager({
           value={domain}
           onChange={(e) => setDomain(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && add()}
-          placeholder="bookings.yourhotel.com"
+          placeholder="www.yourbusiness.com"
           aria-label="Allowed domain"
           className="flex-1 rounded-xl border border-ink-200 bg-white px-3.5 py-2.5 text-sm text-ink-900 placeholder:text-ink-400 focus:border-brand-500 focus:outline-2 focus:outline-brand-100"
         />
@@ -93,7 +102,8 @@ export function DomainManager({
         {domains.length === 0 && (
           <li className="rounded-xl border border-dashed border-ink-200 px-4 py-4 text-sm text-ink-400">
             No domains yet. Requests from unlisted websites are rejected by the
-            server. For local development, add <code className="rounded bg-paper px-1">localhost</code>.
+            server. For local development, add{" "}
+            <code className="rounded bg-paper px-1">localhost</code>.
           </li>
         )}
         {domains.map((d) => (
@@ -112,11 +122,21 @@ export function DomainManager({
             )}
             <div className="ml-auto flex gap-2">
               {!d.verified && (
-                <Button size="sm" variant="outline" disabled={pending} onClick={() => verify(d.id)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={pending}
+                  onClick={() => verify(d.id)}
+                >
                   Verify
                 </Button>
               )}
-              <Button size="sm" variant="ghost" disabled={pending} onClick={() => remove(d.id)}>
+              <Button
+                size="sm"
+                variant="ghost"
+                disabled={pending}
+                onClick={() => remove(d.id)}
+              >
                 <Trash2 className="size-3.5 text-red-500" />
               </Button>
             </div>
@@ -124,10 +144,9 @@ export function DomainManager({
         ))}
       </ul>
       <p className="mt-3 text-xs leading-relaxed text-ink-400">
-        Verification checks that your homepage contains the install snippet
-        with this property ID. Verification is a convenience signal — the
-        server enforces the allowed-domain list on every chat request
-        regardless.
+        Verification checks that your homepage contains the install snippet with
+        this business ID. Verification is a convenience signal — the server
+        enforces the allowed-domain list on every chat request regardless.
       </p>
     </div>
   );
@@ -165,7 +184,7 @@ export function PublishControl({
       </Button>
       <span className="text-sm text-ink-500">
         {isPublished
-          ? "Live — guests can chat with this property's assistant."
+          ? "Live — visitors can chat with this business's assistant."
           : "Not live yet. Test everything, then publish."}
       </span>
     </div>
@@ -179,7 +198,11 @@ export function SnippetBlock({ snippet }: { snippet: string }) {
         {snippet}
       </pre>
       <div className="absolute top-3 right-3">
-        <CopyButton text={snippet} label="Copy snippet" className="border-ink-600 bg-ink-800 text-ink-100 hover:bg-ink-700" />
+        <CopyButton
+          text={snippet}
+          label="Copy snippet"
+          className="border-ink-600 bg-ink-800 text-ink-100 hover:bg-ink-700"
+        />
       </div>
     </div>
   );

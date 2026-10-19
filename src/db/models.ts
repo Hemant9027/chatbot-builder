@@ -1,4 +1,5 @@
 import type { Document } from "mongodb";
+import type { BusinessType } from "@/lib/business";
 
 export interface Entity extends Document {
   id: string;
@@ -35,6 +36,8 @@ export interface OrganizationMember extends Entity {
 export interface Property extends Entity {
   orgId: string;
   name: string;
+  /** Optional for backwards compatibility with existing property documents. */
+  businessType?: BusinessType;
   websiteUrl: string | null;
   status: "active" | "suspended";
   defaultLanguage: string;

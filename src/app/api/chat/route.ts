@@ -20,6 +20,7 @@ import {
 import { detectPromptInjection, injectionRefusalMessage } from "@/lib/guard";
 import { getUsageSnapshot, incrementUsage } from "@/lib/usage";
 import { CONVERSATION_WINDOW_MS } from "@/lib/plans";
+import { isAccommodation } from "@/lib/business";
 import {
   validateOrigin,
   corsHeaders,
@@ -261,7 +262,7 @@ export async function POST(req: Request) {
   }
 
   // 8) Booking intent → honest inquiry capture, never fake availability.
-  if (settings.leadCaptureEnabled && BOOKING_INTENT.test(message)) {
+  if (settings.leadCaptureEnabled && isAccommodation(property) && BOOKING_INTENT.test(message)) {
     const reply = `I'd be glad to help with your stay at ${property.name}! I can't check live availability or prices in this chat — bookings are only confirmed by the property's team. Share your dates and details in the inquiry form below and they'll get back to you personally.`;
     await persist(message, reply);
     return finish(reply, { leadForm: true });

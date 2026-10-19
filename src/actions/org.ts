@@ -23,12 +23,14 @@ import {
   requirePlatformAdmin,
 } from "@/lib/tenancy";
 import { getPlans } from "@/lib/plans";
+import { BUSINESS_TYPES } from "@/lib/business";
 import { normalizeDomain, isBlockedHostname, assertPublicHttpUrl } from "@/lib/ssrf";
 import type { ActionResult } from "@/actions/auth";
 
 const orgPropertySchema = z.object({
   orgName: z.string().trim().min(2, "Organization name is too short.").max(80),
   propertyName: z.string().trim().min(2, "Property name is too short.").max(120),
+  businessType: z.enum(BUSINESS_TYPES),
   websiteUrl: z
     .string()
     .trim()
@@ -74,6 +76,7 @@ export async function createOrgAndPropertyAction(
     id: randomUUID(),
     orgId: org.id,
     name: parsed.data.propertyName,
+    businessType: parsed.data.businessType,
     websiteUrl: parsed.data.websiteUrl || null,
     status: "active",
     defaultLanguage: "en",
@@ -117,6 +120,7 @@ export async function createPropertyAction(values: unknown): Promise<ActionResul
   const schema = z.object({
     orgId: z.string().uuid(),
     name: z.string().trim().min(2).max(120),
+    businessType: z.enum(BUSINESS_TYPES),
     websiteUrl: z.string().trim().url().max(300).or(z.literal("")),
   });
   const parsed = schema.safeParse(values);
@@ -147,6 +151,7 @@ export async function createPropertyAction(values: unknown): Promise<ActionResul
     id: randomUUID(),
     orgId: parsed.data.orgId,
     name: parsed.data.name,
+    businessType: parsed.data.businessType,
     websiteUrl: parsed.data.websiteUrl || null,
     status: "active",
     defaultLanguage: "en",

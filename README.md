@@ -40,7 +40,9 @@ npm run build
 | --- | --- | --- |
 | `MONGODB_URI` | **yes** | MongoDB connection string, including the database name. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | recommended | Shared Redis credentials for chat, lead, scan, and login rate limits. Without them, MongoDB provides the shared fallback; local development uses an in-memory limiter only when MongoDB is also unavailable. |
-| `OPENAI_API_KEY` | no | Enables the live AI provider. **Without it, the app runs in clearly-labeled MOCK MODE**: answers are composed deterministically from approved knowledge only. |
+| `GEMINI_API_KEY` | no | Enables the live Gemini AI provider. Gemini is preferred when both provider keys are set. Without a live provider key, the app runs in clearly-labeled MOCK MODE. |
+| `GEMINI_MODEL` | no | Default `gemini-2.5-flash`. |
+| `OPENAI_API_KEY` | no | Enables the OpenAI provider when `GEMINI_API_KEY` is not set. |
 | `AI_MODEL` | no | Default `gpt-4o-mini`. |
 | `RESEND_API_KEY` / `RESEND_FROM` | no | Lead-notification emails. Without it, email sends are skipped and logged as `email.not_sent`. |
 | `STRIPE_SECRET_KEY` | no | Without it, billing runs in labeled DEMO mode (plan switches apply instantly). |
@@ -72,7 +74,7 @@ receive only the public property ID (an identifier, never authentication).
   get flagged, and surface in the Knowledge Base dashboard as
   "unanswered questions" that can be turned into FAQs.
 - **AI provider abstraction** (`src/lib/ai.ts`): `AIProvider` interface with
-  `OpenAIProvider` (live, when configured) and `MockProvider` (deterministic
+  `GeminiProvider` (live, when configured), `OpenAIProvider` (fallback), and `MockProvider` (deterministic
   development mode). Costs are estimated from recorded tokens and published
   per-model prices and are labeled as estimates.
 - **Usage definition:** a *conversation* = one unique guest session per
@@ -117,7 +119,7 @@ index; authorization remains enforced by server-side membership lookups.
   created automatically by the app.
 3. Set `NEXT_PUBLIC_APP_URL` to the production origin; add each property's
    website domain in **Dashboard → Installation**.
-4. Set `OPENAI_API_KEY` (+ `AI_MODEL`), `RESEND_API_KEY`, Stripe keys + webhook
+4. Set `GEMINI_API_KEY` (+ optional `GEMINI_MODEL`), `RESEND_API_KEY`, Stripe keys + webhook
    endpoint (`/api/webhooks/stripe`) when going live.
 5. Confirm `npm run build`, `npx vitest run`, and a smoke test of the widget
    on a staging HTML page before announcing.
@@ -138,7 +140,7 @@ browser binaries); recommended critical flows are listed in
 ## 8. Known limitations (honest list)
 
 - Mock AI mode is deterministic keyword retrieval, not an LLM — it proves the
-  pipeline but cannot paraphrase. Set `OPENAI_API_KEY` for natural answers.
+  pipeline but cannot paraphrase. Set `GEMINI_API_KEY` for natural answers.
 - Multilingual answers follow the knowledge language in mock mode; live
   multilingual behavior needs provider testing per language.
 - Rate limiter is in-memory (single instance). Use Redis for multi-instance.

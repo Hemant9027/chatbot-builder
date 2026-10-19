@@ -260,9 +260,10 @@
 
     /* ----- lead form ----- */
     var leadBtn = null;
+    var isAccommodation = !cfg.property.businessType || cfg.property.businessType === "accommodation";
     function showLeadButton() {
       if (leadBtn || !cfg.chatbot.leadCaptureEnabled) return;
-      leadBtn = el("button", "icg-lead-btn", "Request booking assistance");
+      leadBtn = el("button", "icg-lead-btn", isAccommodation ? "Request booking assistance" : "Contact the team");
       leadBtn.type = "button";
       leadBtn.addEventListener("click", openLeadForm);
       panel.insertBefore(leadBtn, formRow);
@@ -281,9 +282,11 @@
       hideLeadButton();
 
       var form = el("form", "icg-lead-form");
-      form.appendChild(el("h3", null, "Booking inquiry"));
+      form.appendChild(el("h3", null, isAccommodation ? "Booking inquiry" : "Contact inquiry"));
       form.appendChild(
-        el("p", null, "Share your details and the team will confirm availability personally. This does not create a reservation yet."),
+        el("p", null, isAccommodation
+          ? "Share your details and the team will confirm availability personally. This does not create a reservation yet."
+          : "Share your details and message. The team will follow up personally.")
       );
 
       function field(type, placeholder, attrs) {
@@ -296,12 +299,14 @@
       var nameF = field("text", "Your name *", { required: "required", maxlength: "80" });
       var emailF = field("email", "Email", { maxlength: "200" });
       var phoneF = field("tel", "Phone", { maxlength: "40" });
-      var inF = field("date", "Check-in", { "aria-label": "Check-in date" });
-      var outF = field("date", "Check-out", { "aria-label": "Check-out date" });
-      var guestsF = field("number", "Guests", { min: "1", max: "30" });
-      var datesRow = el("div", "icg-field-row");
-      datesRow.appendChild(inF);
-      datesRow.appendChild(outF);
+      var inF = isAccommodation ? field("date", "Check-in", { "aria-label": "Check-in date" }) : null;
+      var outF = isAccommodation ? field("date", "Check-out", { "aria-label": "Check-out date" }) : null;
+      var guestsF = isAccommodation ? field("number", "Guests", { min: "1", max: "30" }) : null;
+      var datesRow = isAccommodation ? el("div", "icg-field-row") : null;
+      if (datesRow) {
+        datesRow.appendChild(inF);
+        datesRow.appendChild(outF);
+      }
       var msgF = el("textarea", "icg-field");
       msgF.placeholder = "Anything else we should know?";
       msgF.rows = 2;
@@ -330,8 +335,8 @@
       form.appendChild(nameF);
       form.appendChild(emailF);
       form.appendChild(phoneF);
-      form.appendChild(datesRow);
-      form.appendChild(guestsF);
+      if (datesRow) form.appendChild(datesRow);
+      if (guestsF) form.appendChild(guestsF);
       form.appendChild(msgF);
       form.appendChild(consentRow);
       form.appendChild(errEl);
@@ -359,9 +364,9 @@
           name: nameF.value.trim(),
           email: emailF.value.trim(),
           phone: phoneF.value.trim(),
-          checkIn: inF.value || "",
-          checkOut: outF.value || "",
-          guests: guestsF.value ? Number(guestsF.value) : undefined,
+          checkIn: inF ? inF.value || "" : "",
+          checkOut: outF ? outF.value || "" : "",
+          guests: guestsF && guestsF.value ? Number(guestsF.value) : undefined,
           message: msgF.value.trim(),
           consentFollowUp: true,
         })

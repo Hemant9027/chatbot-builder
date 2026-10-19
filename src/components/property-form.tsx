@@ -6,11 +6,20 @@ import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { Button, Input, Label, FieldError, Spinner } from "@/components/ui";
+import {
+  Button,
+  Input,
+  Label,
+  FieldError,
+  Spinner,
+  Select,
+} from "@/components/ui";
 import { createPropertyAction } from "@/actions/org";
+import { BUSINESS_TYPES, BUSINESS_TYPE_LABELS } from "@/lib/business";
 
 const schema = z.object({
   name: z.string().trim().min(2, "Give the property a name.").max(120),
+  businessType: z.enum(BUSINESS_TYPES),
   websiteUrl: z
     .string()
     .trim()
@@ -36,7 +45,10 @@ export function NewPropertyForm({
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<Values>({ resolver: zodResolver(schema) });
+  } = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: { businessType: "other" },
+  });
 
   const canAdd = currentCount < limit;
 
@@ -54,7 +66,13 @@ export function NewPropertyForm({
 
   if (!open) {
     return (
-      <Button onClick={() => setOpen(true)} disabled={!canAdd} title={canAdd ? undefined : `Your plan allows up to ${limit} properties`}>
+      <Button
+        onClick={() => setOpen(true)}
+        disabled={!canAdd}
+        title={
+          canAdd ? undefined : `Your plan allows up to ${limit} properties`
+        }
+      >
         <Plus className="size-4" />
         New property
       </Button>
@@ -67,19 +85,42 @@ export function NewPropertyForm({
       className="w-full max-w-xl space-y-4 rounded-2xl border border-brand-200 bg-brand-50/50 p-6"
     >
       {serverError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700" role="alert">
+        <div
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-700"
+          role="alert"
+        >
           {serverError}
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <Label htmlFor="np-name">Property name</Label>
-          <Input id="np-name" placeholder="Casa Verde Villas" {...register("name")} />
+          <Label htmlFor="np-name">Business name</Label>
+          <Input
+            id="np-name"
+            placeholder="Company or brand name"
+            {...register("name")}
+          />
           <FieldError>{errors.name?.message}</FieldError>
         </div>
         <div>
-          <Label htmlFor="np-url">Website (optional)</Label>
-          <Input id="np-url" type="url" placeholder="https://…" {...register("websiteUrl")} />
+          <Label htmlFor="np-type">Industry</Label>
+          <Select id="np-type" {...register("businessType")}>
+            {BUSINESS_TYPES.map((type) => (
+              <option key={type} value={type}>
+                {BUSINESS_TYPE_LABELS[type]}
+              </option>
+            ))}
+          </Select>
+          <FieldError>{errors.businessType?.message}</FieldError>
+        </div>
+        <div>
+          <Label htmlFor="np-url">Business website (optional)</Label>
+          <Input
+            id="np-url"
+            type="url"
+            placeholder="https://…"
+            {...register("websiteUrl")}
+          />
           <FieldError>{errors.websiteUrl?.message}</FieldError>
         </div>
       </div>

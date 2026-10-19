@@ -23,7 +23,9 @@ export function PageHeader({
           </p>
         )}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && (
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      )}
     </div>
   );
 }
@@ -68,13 +70,7 @@ export function StatCard({
   );
 }
 
-export function UsageBar({
-  used,
-  limit,
-}: {
-  used: number;
-  limit: number;
-}) {
+export function UsageBar({ used, limit }: { used: number; limit: number }) {
   const pct = limit > 0 ? Math.min(100, (used / limit) * 100) : 100;
   const warn = pct >= 80;
   return (
@@ -83,7 +79,12 @@ export function UsageBar({
         <span className="font-medium text-ink-700">
           {used.toLocaleString()} of {limit.toLocaleString()} conversations
         </span>
-        <span className={cn("text-xs font-semibold", warn ? "text-amber-600" : "text-ink-400")}>
+        <span
+          className={cn(
+            "text-xs font-semibold",
+            warn ? "text-amber-600" : "text-ink-400",
+          )}
+        >
           {pct.toFixed(0)}%
         </span>
       </div>
@@ -99,7 +100,7 @@ export function UsageBar({
       {warn && (
         <p className="mt-1.5 text-xs text-amber-700">
           {pct >= 100
-            ? "Allowance exhausted — guests see the FAQ/contact fallback until the next billing period."
+            ? "Allowance exhausted — visitors see the FAQ/contact fallback until the next billing period."
             : "Approaching your monthly allowance. Consider upgrading to avoid interruption."}
         </p>
       )}
@@ -111,10 +112,10 @@ export function NoPropertyState({ action }: { action?: ReactNode }) {
   return (
     <Card className="flex flex-col items-center px-6 py-16 text-center">
       <h2 className="font-display text-xl font-semibold text-ink-900">
-        No properties yet
+        No businesses yet
       </h2>
       <p className="mt-2 max-w-sm text-sm text-ink-500">
-        Create your first property to start building its AI guest assistant.
+        Create your first business to start building its AI customer assistant.
       </p>
       {action && <div className="mt-6">{action}</div>}
     </Card>

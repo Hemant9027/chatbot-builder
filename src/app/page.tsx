@@ -34,16 +34,16 @@ export default function HomePage() {
           <Reveal>
             <div className="inline-flex items-center gap-2 rounded-full border border-ink-100 bg-paper px-3.5 py-1.5 text-xs font-medium text-ink-600">
               <Sparkles className="size-3.5 text-brand-600" />
-              Built for independent hotels, villas & vacation rentals
+              Built for every customer-facing business
             </div>
             <h1 className="font-display mt-6 text-[2.6rem] leading-[1.08] font-semibold tracking-tight text-ink-900 sm:text-5xl lg:text-[3.4rem]">
-              Your AI Guest Assistant.{" "}
+              Your AI Customer Assistant.{" "}
               <span className="text-brand-600">Every Hour of Every Day.</span>
             </h1>
             <p className="mt-5 max-w-xl text-lg leading-relaxed text-ink-500">
-              Help guests find answers, capture booking inquiries, and reduce
-              repetitive questions with an AI assistant personalized for your
-              property.
+              Help customers, visitors, and users find answers, capture
+              inquiries, and reduce repetitive questions with an AI assistant
+              personalized for your business.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <Link
@@ -65,7 +65,8 @@ export default function HomePage() {
                 <Check className="size-4 text-emerald-600" /> No code required
               </span>
               <span className="inline-flex items-center gap-1.5">
-                <Check className="size-4 text-emerald-600" /> Your data stays yours
+                <Check className="size-4 text-emerald-600" /> Your data stays
+                yours
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Check className="size-4 text-emerald-600" /> Live in minutes

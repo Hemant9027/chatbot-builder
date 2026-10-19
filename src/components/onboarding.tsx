@@ -5,12 +5,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Button, Input, Label, FieldError, Spinner } from "@/components/ui";
+import {
+  Button,
+  Input,
+  Label,
+  FieldError,
+  Spinner,
+  Select,
+} from "@/components/ui";
 import { createOrgAndPropertyAction } from "@/actions/org";
+import { BUSINESS_TYPES, BUSINESS_TYPE_LABELS } from "@/lib/business";
 
 const schema = z.object({
   orgName: z.string().trim().min(2, "Give your organization a name.").max(80),
   propertyName: z.string().trim().min(2, "Give your property a name.").max(120),
+  businessType: z.enum(BUSINESS_TYPES),
   websiteUrl: z
     .string()
     .trim()
@@ -28,7 +37,12 @@ export function OnboardingForm() {
     formState: { errors, isSubmitting },
   } = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: { orgName: "", propertyName: "", websiteUrl: "" },
+    defaultValues: {
+      orgName: "",
+      propertyName: "",
+      businessType: "other",
+      websiteUrl: "",
+    },
   });
 
   const onSubmit = handleSubmit(async (values) => {
@@ -44,7 +58,10 @@ export function OnboardingForm() {
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
       {serverError && (
-        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">
+        <div
+          className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          role="alert"
+        >
           {serverError}
         </div>
       )}
@@ -57,20 +74,31 @@ export function OnboardingForm() {
         />
         <FieldError>{errors.orgName?.message}</FieldError>
         <p className="mt-1 text-xs text-ink-400">
-          Your workspace — it can hold multiple properties and team members.
+          Your workspace — it can hold multiple businesses and team members.
         </p>
       </div>
       <div>
-        <Label htmlFor="propertyName">Property name</Label>
+        <Label htmlFor="propertyName">Business name</Label>
         <Input
           id="propertyName"
-          placeholder="Azure Palms Resort & Spa"
+          placeholder="Your company or brand name"
           {...register("propertyName")}
         />
         <FieldError>{errors.propertyName?.message}</FieldError>
       </div>
       <div>
-        <Label htmlFor="websiteUrl">Property website (optional)</Label>
+        <Label htmlFor="businessType">Industry</Label>
+        <Select id="businessType" {...register("businessType")}>
+          {BUSINESS_TYPES.map((type) => (
+            <option key={type} value={type}>
+              {BUSINESS_TYPE_LABELS[type]}
+            </option>
+          ))}
+        </Select>
+        <FieldError>{errors.businessType?.message}</FieldError>
+      </div>
+      <div>
+        <Label htmlFor="websiteUrl">Business website (optional)</Label>
         <Input
           id="websiteUrl"
           type="url"
@@ -79,12 +107,20 @@ export function OnboardingForm() {
         />
         <FieldError>{errors.websiteUrl?.message}</FieldError>
         <p className="mt-1 text-xs text-ink-400">
-          We can safely scan it later to draft knowledge for your review.
+          We can safely scan it later to draft approved knowledge for your
+          assistant.
         </p>
       </div>
-      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? <Spinner /> : null}
-        {isSubmitting ? "Creating your workspace…" : "Create workspace & property"}
+        {isSubmitting
+          ? "Creating your workspace…"
+          : "Create workspace & business"}
       </Button>
     </form>
   );

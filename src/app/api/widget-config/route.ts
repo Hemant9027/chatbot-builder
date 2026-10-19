@@ -59,7 +59,11 @@ export async function GET(req: Request) {
     {
       ok: true,
       published: settings.isPublished,
-      property: { name: property.name, status: property.status },
+      property: {
+        name: property.name,
+        status: property.status,
+        businessType: property.businessType ?? "accommodation",
+      },
       chatbot: {
         displayName: settings.displayName,
         welcomeMessage: settings.welcomeMessage,
