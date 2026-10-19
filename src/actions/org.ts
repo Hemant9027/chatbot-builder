@@ -27,6 +27,35 @@ import { BUSINESS_TYPES } from "@/lib/business";
 import { normalizeDomain, isBlockedHostname, assertPublicHttpUrl } from "@/lib/ssrf";
 import type { ActionResult } from "@/actions/auth";
 
+const MAX_VERIFIER_REDIRECTS = 5;
+
+function hasWidgetSnippet(html: string, propertyId: string): boolean {
+  const escapedId = propertyId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(
+    `data-property-id\\s*=\\s*["']${escapedId}["']`,
+    "i",
+  ).test(html);
+}
+
+async function fetchVerifierPage(startUrl: URL): Promise<Response> {
+  let url = startUrl;
+  for (let hop = 0; hop <= MAX_VERIFIER_REDIRECTS; hop += 1) {
+    const res = await fetch(url, {
+      signal: AbortSignal.timeout(10_000),
+      headers: { "User-Agent": "InfyCrest-DomainVerifier/1.0" },
+      redirect: "manual",
+    });
+    if (res.status < 300 || res.status >= 400) return res;
+    const location = res.headers.get("location");
+    if (!location) return res;
+    if (hop === MAX_VERIFIER_REDIRECTS) {
+      throw new Error("Too many redirects while checking the website.");
+    }
+    url = await assertPublicHttpUrl(new URL(location, url).toString());
+  }
+  throw new Error("Could not verify the website.");
+}
+
 const orgPropertySchema = z.object({
   orgName: z.string().trim().min(2, "Organization name is too short.").max(80),
   propertyName: z.string().trim().min(2, "Property name is too short.").max(120),
@@ -241,16 +270,12 @@ export async function verifyDomainAction(
 
   try {
     const url = await assertPublicHttpUrl(`https://${row.domain}`);
-    const res = await fetch(url, {
-      signal: AbortSignal.timeout(10_000),
-      headers: { "User-Agent": "InfyCrest-DomainVerifier/1.0" },
-      redirect: "manual",
-    });
+    const res = await fetchVerifierPage(url);
     if (!res.ok) {
       return { ok: false, error: `Could not load https://${row.domain} (HTTP ${res.status}).` };
     }
     const html = (await res.text()).slice(0, 1_000_000);
-    const found = html.includes(`data-property-id="${row.propertyId}"`);
+    const found = hasWidgetSnippet(html, row.propertyId);
     if (found) {
       await domains.updateOne(
         { id: domainId, propertyId: row.propertyId },
