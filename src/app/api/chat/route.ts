@@ -11,7 +11,7 @@ import type {
 } from "@/db/models";
 import { writeAuditLog } from "@/db/audit";
 import { chatIpLimiter, chatSessionLimiter, getClientIp } from "@/lib/rate-limit";
-import { rankChunks } from "@/lib/retrieval";
+import { rankChunks, RELEVANCE_THRESHOLD } from "@/lib/retrieval";
 import {
   getAIProvider,
   buildSystemPrompt,
@@ -280,7 +280,9 @@ export async function POST(req: Request) {
       content: 1,
     })
     .toArray();
-  const retrieved = rankChunks(approvedChunks, message, propertyId, 6);
+  const retrieved = rankChunks(approvedChunks, message, propertyId, 3).filter(
+    (chunk) => chunk.score >= RELEVANCE_THRESHOLD,
+  );
 
   // 10) Conversation history for context.
   const historyRows = await (await getCollection<Message>("messages"))
