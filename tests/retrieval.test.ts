@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { rankChunks, tokenize, estimateTokens } from "../src/lib/retrieval";
+import {
+  rankChunks,
+  selectRelevantFacts,
+  tokenize,
+  estimateTokens,
+} from "../src/lib/retrieval";
 
 const PROPERTY_A = "11111111-1111-4111-8111-111111111111";
 const PROPERTY_B = "22222222-2222-4222-8222-222222222222";
@@ -157,6 +162,59 @@ describe("ranking quality", () => {
     }];
     expect(rankChunks(knowledge, "Do you provide helicopter transfers?", PROPERTY_A))
       .toHaveLength(0);
+  });
+});
+
+describe("retrieved fact selection", () => {
+  const amenityList = `AMENITIES
+- Infinity Pool: 34-metre pool above the gorge
+- Jungle Spa: open-air treatment pavilions
+- Yoga Pavilion: sunrise practice above the river
+- Airport Transfer: chauffeured SUV, about 75 minutes from DPS airport
+- Private Concierge: a resident host for every villa
+- Free Wi-Fi: fibre throughout the estate
+- In-Villa Dining: served on your terrace, all day`;
+
+  it("sends only the Wi-Fi fact for a Wi-Fi question", () => {
+    const facts = selectRelevantFacts(amenityList, "is there any wifi?");
+    expect(facts).toBe("Free Wi-Fi: fibre throughout the estate");
+    expect(facts).not.toMatch(/pool|spa|yoga|airport|concierge|dining/i);
+  });
+
+  it("keeps a matching FAQ answer even when the answer uses different wording", () => {
+    expect(
+      selectRelevantFacts(
+        "Q: Is parking free?\nA: Yes, it is complimentary.",
+        "Is parking free?",
+      ),
+    ).toBe("Yes, it is complimentary.");
+  });
+
+  it("returns no facts when a retrieved chunk contains no matching detail", () => {
+    expect(
+      selectRelevantFacts(amenityList, "Do you offer helicopter transfers?"),
+    ).toBe("");
+  });
+
+  it("selects only the requested pool measurement, not pool access details", () => {
+    const knowledge = `${amenityList}
+- Pool Hours: open daily from 7:00 AM to 10:00 PM`;
+    const facts = selectRelevantFacts(knowledge, "How long is the pool?");
+    expect(facts).toBe("Infinity Pool: 34-metre pool above the gorge");
+    expect(facts).not.toMatch(/7:00 AM|10:00 PM/);
+  });
+
+  it("selects only dinner hours from a multi-meal schedule", () => {
+    const knowledge = "Restaurant: breakfast 7:00–11:00 AM; dinner 6:00–10:30 PM";
+    expect(selectRelevantFacts(knowledge, "What time is dinner?"))
+      .toBe("dinner 6:00–10:30 PM");
+  });
+
+  it("selects transfer duration and airport reference without other amenities", () => {
+    const facts = selectRelevantFacts(amenityList, "How long is the airport transfer?");
+    expect(facts).toContain("Airport Transfer");
+    expect(facts).toContain("75 minutes");
+    expect(facts).not.toMatch(/pool|spa|yoga|concierge|wi-fi|dining/i);
   });
 });
 

@@ -72,10 +72,12 @@ configured a valid key and selected a model available to your Gemini project.
   allowed-domain check → rate limits → usage limit → prompt-injection guard →
   booking-intent shortcut → retrieve a small set of relevant, **approved
   chunks for this property only** (filtered by `propertyId` in MongoDB *and*
-  re-filtered before ranking — see `src/lib/retrieval.ts`) → bounded
+  re-filtered before ranking — see `src/lib/retrieval.ts`) → reduce each
+  retrieved chunk to the fact lines relevant to the question → bounded
   same-conversation history for follow-ups → provider call with a concise,
-  grounded system prompt → persist messages + usage. The model is not called
-  when retrieval finds no relevant approved facts. Unknown questions get the
+  grounded system prompt → persist messages + usage. This fact filtering is
+  applied across all topics, not only amenities. The model is not called when
+  retrieval finds no relevant approved facts. Unknown questions get the
   configured handoff, are flagged, and surface in the Knowledge Base dashboard
   as "unanswered questions" that can be turned into FAQs.
 - **AI provider abstraction** (`src/lib/ai.ts`): `AIProvider` interface with

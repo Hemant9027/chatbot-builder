@@ -11,7 +11,11 @@ import type {
 } from "@/db/models";
 import { writeAuditLog } from "@/db/audit";
 import { chatIpLimiter, chatSessionLimiter, getClientIp } from "@/lib/rate-limit";
-import { rankChunks, RELEVANCE_THRESHOLD } from "@/lib/retrieval";
+import {
+  rankChunks,
+  RELEVANCE_THRESHOLD,
+  selectRelevantFacts,
+} from "@/lib/retrieval";
 import {
   getAIProvider,
   buildSystemPrompt,
@@ -289,6 +293,12 @@ export async function POST(req: Request) {
     isFollowUp && previousGuestQuestion
       ? `${previousGuestQuestion} ${message}`
       : message;
+  const factQuery =
+    isFollowUp &&
+    previousGuestQuestion &&
+    /\b(it|that|those|they|them|there|too|also|again)\b/i.test(message)
+      ? previousGuestQuestion
+      : message;
 
   // 10) Retrieve only this property's approved chunks before ranking.
   const approvedChunks = await (
@@ -302,9 +312,15 @@ export async function POST(req: Request) {
       content: 1,
     })
     .toArray();
-  const retrieved = rankChunks(approvedChunks, retrievalQuery, propertyId, 3).filter(
-    (chunk) => chunk.score >= RELEVANCE_THRESHOLD,
-  );
+  const retrieved = rankChunks(approvedChunks, retrievalQuery, propertyId, 3)
+    .filter(
+      (chunk) => chunk.score >= RELEVANCE_THRESHOLD,
+    )
+    .map((chunk) => ({
+      ...chunk,
+      content: selectRelevantFacts(chunk.content, factQuery),
+    }))
+    .filter((chunk) => chunk.content.length > 0);
 
   // Do not ask the model to answer from general knowledge when retrieval is empty.
   if (retrieved.length === 0) {

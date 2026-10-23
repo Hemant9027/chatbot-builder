@@ -26,6 +26,36 @@ export interface RetrievableChunk {
 
 export type RankedChunk<T extends RetrievableChunk> = T & { score: number };
 
+const FACT_DETAIL_GROUPS: Record<string, string[]> = {
+  availability: ["available", "availability", "offer", "offers", "provide", "provided", "exist", "exists"],
+  coverage: ["where", "within", "throughout", "inside", "across", "coverage", "estate", "rooms", "room", "villa", "villas"],
+  duration: ["long", "duration", "take", "takes", "minute", "minutes"],
+  measurement: ["long", "length", "size", "metre", "metres", "meter", "meters", "foot", "feet"],
+  opening: ["when", "time", "hour", "hours", "open", "opens", "opening", "close", "closes", "closing"],
+  pricing: ["free", "complimentary", "cost", "price", "prices", "rate", "rates", "fee", "fees", "charge", "charges"],
+};
+
+const DETAIL_TOKENS = new Set(Object.values(FACT_DETAIL_GROUPS).flat());
+
+function factDetailGroups(text: string): Set<string> {
+  const words = new Set(tokenize(text));
+  const groups = new Set<string>();
+  for (const [group, terms] of Object.entries(FACT_DETAIL_GROUPS)) {
+    if (terms.some((term) => words.has(term))) groups.add(group);
+  }
+  if (/\bhow many hours?\b/i.test(text)) groups.add("duration");
+  if (/\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)\b/i.test(text)) {
+    groups.add("opening");
+  }
+  if (/\b\d+(?:\.\d+)?\s*(?:minutes?|hours?)\b/i.test(text)) {
+    groups.add("duration");
+  }
+  if (/\b\d+(?:\.\d+)?\s*[- ]?(?:metres?|meters?|feet|foot)\b/i.test(text)) {
+    groups.add("measurement");
+  }
+  return groups;
+}
+
 export function tokenize(text: string): string[] {
   let normalized = text
     .toLowerCase()
@@ -91,6 +121,53 @@ export function rankChunks<T extends RetrievableChunk>(
     .filter((c) => c.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
+}
+
+/**
+ * Reduces retrieved documents to fact lines that overlap the question. Large
+ * pasted amenity lists otherwise give a model unrelated facts to repeat.
+ */
+export function selectRelevantFacts(content: string, query: string): string {
+  const queryTokens = new Set(tokenize(query));
+  if (queryTokens.size === 0) return "";
+
+  const faq = content.match(/^\s*Q:\s*(.*?)\s*\r?\n\s*A:\s*([\s\S]*)$/i);
+  const answer = faq?.[2] ?? content;
+  const faqQuestionTokens = new Set(tokenize(faq?.[1] ?? ""));
+  const faqMatches = [...queryTokens].some((token) => faqQuestionTokens.has(token));
+
+  const facts = answer
+    .split(/\r?\n/)
+    .flatMap((line) => line.split(/(?<=[.!?])\s+|;\s+/))
+    .map((fact) => fact.replace(/^\s*[-*•]\s*/, "").trim())
+    .filter((fact) => fact && !/^(amenities|facilities)\s*:?\s*$/i.test(fact));
+
+  const detailGroups = factDetailGroups(query);
+  const queryAnchors = [...queryTokens].filter((token) => !DETAIL_TOKENS.has(token));
+  if (queryAnchors.length > 0) {
+    const scored = facts
+      .map((fact) => {
+        const factTokens = new Set(tokenize(fact));
+        const anchorMatches = queryAnchors.filter((token) => factTokens.has(token)).length;
+        const factGroups = factDetailGroups(fact);
+        const detailMatches = [...detailGroups].filter((group) => factGroups.has(group)).length;
+        return {
+          fact,
+          score: anchorMatches * 10 + detailMatches * 2,
+          anchorMatches,
+        };
+      })
+      .filter((item) => item.anchorMatches > 0);
+    const bestScore = Math.max(0, ...scored.map((item) => item.score));
+    const relevant = scored
+      .filter((item) => item.score === bestScore)
+      .map((item) => item.fact);
+    if (relevant.length > 0) return relevant.join("\n");
+  }
+
+  // For concise FAQs, the question can identify an answer phrased without the
+  // same keywords, e.g. "Is parking free?" → "Yes, it is complimentary."
+  return faqMatches ? facts.slice(0, 1).join("\n") : "";
 }
 
 /** Minimum score for us to consider retrieved knowledge "relevant". */
