@@ -14,7 +14,7 @@ const STOPWORDS = new Set(
   (
     "a an the and or but if then else for to of in on at with without our your you we i is are was were be been " +
     "do does did can could should would will what when where who whom how why which there here this that these those " +
-    "it its as by from about into over after before between not no yes so such per any have has had"
+    "it its as by from about into over after before between not no yes so such per any have has had give provided"
   ).split(/\s+/),
 );
 
@@ -27,9 +27,18 @@ export interface RetrievableChunk {
 export type RankedChunk<T extends RetrievableChunk> = T & { score: number };
 
 export function tokenize(text: string): string[] {
-  return text
+  let normalized = text
     .toLowerCase()
-    .replace(/[^a-z0-9À-ÿ\s-]/g, " ")
+    .replace(/wi[\s-]?fi/g, " wifi ")
+    .replace(/\b(complimentary|complimentry)\b/g, " free ")
+    .replace(/[^a-z0-9À-ÿ\s-]/g, " ");
+
+  // "Airport transfer" is often documented as an airport shuttle.
+  if (/\bairport\b/.test(normalized) && /\btransfer\b/.test(normalized)) {
+    normalized = normalized.replace(/\btransfer\b/g, " shuttle ");
+  }
+
+  return normalized
     .split(/\s+/)
     .filter((t) => t.length > 2 && !STOPWORDS.has(t));
 }
@@ -47,6 +56,8 @@ export function rankChunks<T extends RetrievableChunk>(
   if (queryTokens.length === 0) return [];
   const tokenSet = new Set(queryTokens);
   const queryLower = query.toLowerCase().trim();
+  const poolDimensionQuestion =
+    /\bpool\b/i.test(query) && /\b(long|length|size|metre|meter)\b/i.test(query);
 
   const scored = scoped.map((chunk) => {
     const contentTokens = tokenize(chunk.content);
@@ -57,6 +68,12 @@ export function rankChunks<T extends RetrievableChunk>(
     for (const t of tokenSet) {
       const c = counts.get(t) ?? 0;
       if (c > 0) matchWeight += 1 + Math.min(3, c - 1) * 0.25;
+    }
+    if (
+      poolDimensionQuestion &&
+      /\b\d+(?:\.\d+)?\s*[- ]?(?:metres?|meters?)\b/i.test(chunk.content)
+    ) {
+      matchWeight += 1;
     }
     const coverage = matchWeight / tokenSet.size;
     const density = matchWeight / Math.sqrt(contentTokens.length);

@@ -40,8 +40,8 @@ npm run build
 | --- | --- | --- |
 | `MONGODB_URI` | **yes** | MongoDB connection string, including the database name. |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | recommended | Shared Redis credentials for chat, lead, scan, and login rate limits. Without them, MongoDB provides the shared fallback; local development uses an in-memory limiter only when MongoDB is also unavailable. |
-| `GEMINI_API_KEY` | no | Enables the live Gemini AI provider. Gemini is preferred when both provider keys are set. Without a live provider key, the app runs in clearly-labeled MOCK MODE. |
-| `GEMINI_MODEL` | no | Default `gemini-2.5-flash`. |
+| `GEMINI_API_KEY` | no | Server-only key for Gemini's `generateContent` API. Gemini is preferred when both provider keys are set. Without a live provider key, the app runs in clearly-labeled MOCK MODE; no paid provider request is made. |
+| `GEMINI_MODEL` | no | Model identifier supported by Gemini `generateContent`; defaults to `gemini-2.5-flash`. |
 | `OPENAI_API_KEY` | no | Enables the OpenAI provider when `GEMINI_API_KEY` is not set. |
 | `AI_MODEL` | no | Default `gpt-4o-mini`. |
 | `RESEND_API_KEY` / `RESEND_FROM` | no | Lead-notification emails. Without it, email sends are skipped and logged as `email.not_sent`. |
@@ -49,8 +49,11 @@ npm run build
 | `STRIPE_WEBHOOK_SECRET` | no | Enables the signature-verified webhook at `/api/webhooks/stripe`; the endpoint returns 503 when unset. |
 | `NEXT_PUBLIC_APP_URL` | no | Base URL used in install snippets (falls back to request host). |
 
-Secrets are read **only in server code**. The widget script and browser bundle
-receive only the public property ID (an identifier, never authentication).
+Secrets are read **only in server code**. Copy `.env.example` to the ignored
+`.env.local` file and replace the Gemini key placeholder there. The widget
+script and browser bundle receive only the public property ID (an identifier,
+never authentication). Do not make a live provider request until you have
+configured a valid key and selected a model available to your Gemini project.
 
 ## 3. Architecture decisions
 
@@ -67,12 +70,14 @@ receive only the public property ID (an identifier, never authentication).
   `planLimits`, `auditLogs`. Every guest-facing record carries `propertyId`.
 - **RAG pipeline** (`/api/chat`): validate input → resolve property →
   allowed-domain check → rate limits → usage limit → prompt-injection guard →
-  booking-intent shortcut → retrieve **approved chunks for this property only**
-  (filtered by `propertyId` in MongoDB *and* re-filtered before ranking —
-  see `src/lib/retrieval.ts`) → provider call with strict system prompt →
-  persist messages + usage. Unknown questions get the configured handoff,
-  get flagged, and surface in the Knowledge Base dashboard as
-  "unanswered questions" that can be turned into FAQs.
+  booking-intent shortcut → retrieve a small set of relevant, **approved
+  chunks for this property only** (filtered by `propertyId` in MongoDB *and*
+  re-filtered before ranking — see `src/lib/retrieval.ts`) → bounded
+  same-conversation history for follow-ups → provider call with a concise,
+  grounded system prompt → persist messages + usage. The model is not called
+  when retrieval finds no relevant approved facts. Unknown questions get the
+  configured handoff, are flagged, and surface in the Knowledge Base dashboard
+  as "unanswered questions" that can be turned into FAQs.
 - **AI provider abstraction** (`src/lib/ai.ts`): `AIProvider` interface with
   `GeminiProvider` (live, when configured), `OpenAIProvider` (fallback), and `MockProvider` (deterministic
   development mode). Costs are estimated from recorded tokens and published
@@ -128,10 +133,12 @@ index; authorization remains enforced by server-side membership lookups.
 
 ## 7. Tests
 
-`tests/` (Vitest, 30 tests): retrieval tenant isolation + ranking,
+`tests/` (Vitest): retrieval relevance and tenant isolation, concise local
+fallback answers, Gemini request configuration and safe provider failures,
 prompt-injection guard, sliding-window rate limiter, SSRF guard, Stripe
-webhook HMAC verification (valid/tampered/wrong-secret/expired), usage
-periods/ratios, cost estimation, system-prompt safety rules.
+webhook HMAC verification, usage periods/ratios, cost estimation, and
+system-prompt safety rules. Gemini tests mock `fetch` and do not use live API
+credits.
 
 Playwright E2E skeleton is intentionally not included in this sandbox (no
 browser binaries); recommended critical flows are listed in

@@ -69,6 +69,95 @@ describe("ranking quality", () => {
     }));
     expect(rankChunks(many, "pool opening hours", PROPERTY_A, 6)).toHaveLength(6);
   });
+
+  it("matches Wi-Fi wording variants without returning unrelated FAQs", () => {
+    const knowledge = [
+      {
+        id: "wifi",
+        propertyId: PROPERTY_A,
+        content: "Q: Is Wi-Fi available?\nA: Complimentary fiber Wi-Fi is available throughout the estate.",
+      },
+      {
+        id: "restaurant",
+        propertyId: PROPERTY_A,
+        content: "Q: What time is dinner?\nA: Dinner is served from 6:00 PM to 10:30 PM.",
+      },
+    ];
+    const results = rankChunks(knowledge, "Does you give free wifi?", PROPERTY_A);
+    expect(results[0]?.id).toBe("wifi");
+    expect(results.map((result) => result.id)).not.toContain("restaurant");
+  });
+
+  it("retrieves the dinner fact for a dinner-hours question", () => {
+    const knowledge = [
+      {
+        id: "restaurant",
+        propertyId: PROPERTY_A,
+        content: "Q: What time is dinner?\nA: Dinner is served from 6:00 PM to 10:30 PM.",
+      },
+      {
+        id: "pool",
+        propertyId: PROPERTY_A,
+        content: "Q: What are the pool hours?\nA: The pool is open from 7:00 AM to 10:00 PM.",
+      },
+    ];
+    expect(rankChunks(knowledge, "What time is dinner?", PROPERTY_A)[0]?.id).toBe(
+      "restaurant",
+    );
+  });
+
+  it("uses documented measurements for pool-length questions", () => {
+    const knowledge = [
+      {
+        id: "pool",
+        propertyId: PROPERTY_A,
+        content: "Q: How long is the pool?\nA: The infinity pool is 34 metres long.",
+      },
+      {
+        id: "pool-hours",
+        propertyId: PROPERTY_A,
+        content: "Q: When is the pool open?\nA: The pool opens daily at 7:00 AM.",
+      },
+    ];
+    expect(rankChunks(knowledge, "How long is the pool?", PROPERTY_A)[0]?.id).toBe(
+      "pool",
+    );
+  });
+
+  it("matches airport transfer wording to an airport shuttle FAQ", () => {
+    const knowledge = [{
+      id: "airport",
+      propertyId: PROPERTY_A,
+      content: "Q: Do you offer an airport shuttle?\nA: The shuttle runs between the resort and Coral Bay Airport and takes 25 minutes.",
+    }];
+    expect(
+      rankChunks(knowledge, "How long does the airport transfer take?", PROPERTY_A)[0]?.id,
+    ).toBe("airport");
+  });
+
+  it("uses the previous guest question to retrieve facts for a clear follow-up", () => {
+    const knowledge = [{
+      id: "wifi",
+      propertyId: PROPERTY_A,
+      content: "Q: Is Wi-Fi available?\nA: Complimentary Wi-Fi is available throughout the estate.",
+    }];
+    const result = rankChunks(
+      knowledge,
+      "Is Wi-Fi available? Is it complimentary?",
+      PROPERTY_A,
+    );
+    expect(result[0]?.id).toBe("wifi");
+  });
+
+  it("does not match an unconfirmed transfer type to a different transfer FAQ", () => {
+    const knowledge = [{
+      id: "airport",
+      propertyId: PROPERTY_A,
+      content: "Q: Do you offer an airport shuttle?\nA: The airport shuttle takes 25 minutes.",
+    }];
+    expect(rankChunks(knowledge, "Do you provide helicopter transfers?", PROPERTY_A))
+      .toHaveLength(0);
+  });
 });
 
 describe("tokenization & token estimation", () => {

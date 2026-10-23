@@ -225,7 +225,6 @@ export async function POST(req: Request) {
     await incrementUsage(propertyId, {
       conversations: newConversation ? 1 : 0,
       messages: 2,
-      tokensOut: opts.tokens ?? 0,
     });
   };
 
@@ -268,7 +267,30 @@ export async function POST(req: Request) {
     return finish(reply, { leadForm: true });
   }
 
-  // 9) Retrieval: ONLY this property's approved chunks, filtered before ranking.
+  // 9) Load a bounded, tenant-scoped conversation history.
+  const historyRows = await (await getCollection<Message>("messages"))
+    .find({ conversationId: conversation.id, propertyId })
+    .sort({ createdAt: -1 })
+    .limit(8)
+    .toArray();
+  historyRows.reverse();
+  const history: AIChatMessage[] = historyRows.map((m) => ({
+    role: m.role === "guest" ? "user" : "assistant",
+    content: m.content,
+  }));
+
+  const previousGuestQuestion = [...historyRows]
+    .reverse()
+    .find((row) => row.role === "guest")?.content;
+  const isFollowUp =
+    /\b(it|that|those|they|them|there|too|also|again)\b/i.test(message) ||
+    /^(and|but|what about|how about)\b/i.test(message.trim());
+  const retrievalQuery =
+    isFollowUp && previousGuestQuestion
+      ? `${previousGuestQuestion} ${message}`
+      : message;
+
+  // 10) Retrieve only this property's approved chunks before ranking.
   const approvedChunks = await (
     await getCollection<KnowledgeChunk>("knowledgeChunks")
   )
@@ -280,20 +302,21 @@ export async function POST(req: Request) {
       content: 1,
     })
     .toArray();
-  const retrieved = rankChunks(approvedChunks, message, propertyId, 3).filter(
+  const retrieved = rankChunks(approvedChunks, retrievalQuery, propertyId, 3).filter(
     (chunk) => chunk.score >= RELEVANCE_THRESHOLD,
   );
 
-  // 10) Conversation history for context.
-  const historyRows = await (await getCollection<Message>("messages"))
-    .find({ conversationId: conversation.id, propertyId })
-    .sort({ createdAt: 1 })
-    .limit(40)
-    .toArray();
-  const history: AIChatMessage[] = historyRows.slice(-8).map((m) => ({
-    role: m.role === "guest" ? "user" : "assistant",
-    content: m.content,
-  }));
+  // Do not ask the model to answer from general knowledge when retrieval is empty.
+  if (retrieved.length === 0) {
+    const fallback = `${settings.handoffMessage}${
+      settings.contactEmail ? ` You can reach the team at ${settings.contactEmail}.` : ""
+    }`;
+    await persist(message, fallback, { flagged: true });
+    return finish(fallback, {
+      answered: false,
+      leadForm: settings.leadCaptureEnabled,
+    });
+  }
 
   const provider = getAIProvider();
   const systemPrompt = buildSystemPrompt(property, settings);
@@ -301,6 +324,7 @@ export async function POST(req: Request) {
   let reply = "";
   let providerFailed = false;
   let tokensOut = 0;
+  const providerStartedAt = Date.now();
   try {
     const result = await provider.generate(
       [
@@ -326,6 +350,19 @@ export async function POST(req: Request) {
         cost: result.costUsd,
       });
     }
+    await writeAuditLog({
+      propertyId,
+      action: "ai.request_completed",
+      meta: {
+        sessionId,
+        provider: provider.name,
+        model: result.model,
+        latencyMs: Date.now() - providerStartedAt,
+        tokensIn: result.tokensIn,
+        tokensOut: result.tokensOut,
+        estimatedCostUsd: result.costUsd,
+      },
+    });
   } catch (err) {
     providerFailed = true;
     await writeAuditLog({
@@ -334,7 +371,9 @@ export async function POST(req: Request) {
       meta: {
         sessionId,
         provider: provider.name,
-        error: err instanceof Error ? err.message.slice(0, 200) : "unknown",
+        error: "provider_request_failed",
+        errorType: err instanceof Error ? err.name : "unknown",
+        latencyMs: Date.now() - providerStartedAt,
       },
     });
   }
@@ -347,7 +386,7 @@ export async function POST(req: Request) {
   }
 
   if (!reply) {
-    // No relevant approved knowledge (or provider returned nothing).
+    // The provider had no answer grounded in the retrieved approved knowledge.
     const fallback = `${settings.handoffMessage}${
       settings.contactEmail ? ` You can reach the team at ${settings.contactEmail}.` : ""
     }`;
