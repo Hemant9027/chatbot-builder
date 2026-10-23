@@ -71,34 +71,36 @@ export default async function OverviewPage({
       orgId: property.orgId,
     }),
   ]);
-  const [conversationCount, messageCount, unansweredRows, leadCount] =
-    await Promise.all([
-      (await getCollection<Conversation>("conversations")).countDocuments({
-        propertyId: property.id,
-        startedAt: { $gte: since },
-      }),
-      (await getCollection<Message>("messages")).countDocuments({
-        propertyId: property.id,
-        createdAt: { $gte: since },
-      }),
-      (await getCollection<Conversation>("conversations"))
-        .aggregate<{
-          total: number;
-        }>([
-          { $match: { propertyId: property.id, startedAt: { $gte: since } } },
-          { $group: { _id: null, total: { $sum: "$unansweredCount" } } },
-        ])
-        .toArray(),
-      (await getCollection<Lead>("leads")).countDocuments({
-        propertyId: property.id,
-        createdAt: { $gte: since },
-      }),
-    ]);
-  const unansweredCount = unansweredRows[0]?.total ?? 0;
-
-  const usage = await getUsageSnapshot(property.id, sub?.planId ?? "starter");
-
-  const [recentConversations, recentLeads] = await Promise.all([
+  const [
+    conversationCount,
+    messageCount,
+    unansweredRows,
+    leadCount,
+    usage,
+    recentConversations,
+    recentLeads,
+  ] = await Promise.all([
+    (await getCollection<Conversation>("conversations")).countDocuments({
+      propertyId: property.id,
+      startedAt: { $gte: since },
+    }),
+    (await getCollection<Message>("messages")).countDocuments({
+      propertyId: property.id,
+      createdAt: { $gte: since },
+    }),
+    (await getCollection<Conversation>("conversations"))
+      .aggregate<{
+        total: number;
+      }>([
+        { $match: { propertyId: property.id, startedAt: { $gte: since } } },
+        { $group: { _id: null, total: { $sum: "$unansweredCount" } } },
+      ])
+      .toArray(),
+    (await getCollection<Lead>("leads")).countDocuments({
+      propertyId: property.id,
+      createdAt: { $gte: since },
+    }),
+    getUsageSnapshot(property.id, sub?.planId ?? "starter"),
     (await getCollection<Conversation>("conversations"))
       .find({ propertyId: property.id })
       .sort({ lastMessageAt: -1 })
@@ -110,6 +112,7 @@ export default async function OverviewPage({
       .limit(5)
       .toArray(),
   ]);
+  const unansweredCount = unansweredRows[0]?.total ?? 0;
 
   const q = `?property=${property.id}`;
 
